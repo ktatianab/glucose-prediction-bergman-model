@@ -34,9 +34,6 @@ Output: [G(k+1), X(k+1), I(k+1)]
 ## How to run
 
 
-
-## How to run
-
 ```bash
 git clone https://github.com/ktatianab/glucose-prediction-bergman-model.git
 cd glucose-prediction-bergman-model
