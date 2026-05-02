@@ -7,24 +7,16 @@ import numpy as np
 '''
 
 '''Funcion con la dinamica del modelo de Bergman'''
-def bergman_derivatives(state, t, p1, p2, p3, p4, Gb, Ib, u):
+def bergman_derivatives(state, t, p1, p2, p3, p4, Gb, Ib, u, D):
     G, X, I = state
-    u_in = u
-
-    # Ecuaciones del modelo minimo de Bergman
-    dGdt = -p1*(G - Gb) - G*X
+    dGdt = -p1*(G - Gb) - G*X + D
     dXdt = -p2*X + p3*(I - Ib)
-    dIdt = -p4*(I - Ib) + u_in
-
+    dIdt = -p4*(I - Ib) + u
     return np.array([dGdt, dXdt, dIdt])
-
 
 ''' Funcion para simular un paso del modelo de Bergman usando Euler (discretizacion)'''
 
-def bergman_step(state, t, params, Ts, u):
+def bergman_step(state, t, params, Ts, u, D):
     p1, p2, p3, p4, Gb, Ib = params
-
-    derivatives = bergman_derivatives( state, t, p1, p2, p3, p4, Gb, Ib, u)
-
-    next_state = state + Ts * derivatives
-    return next_state
+    derivatives = bergman_derivatives(state, t, p1, p2, p3, p4, Gb, Ib, u, D)
+    return state + Ts * derivatives

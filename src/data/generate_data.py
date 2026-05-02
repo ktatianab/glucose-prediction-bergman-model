@@ -29,6 +29,7 @@ Con parametros:
 '''
 
 def generate_data(num_simulations, time_steps, Ts, p1, p2, p3, p4, Gb, Ib):
+    
 
     set_seed(42) #semilla aleatoria para reproducibilidad (obtener los mismos datos cada vez que se ejecute)
 
@@ -63,7 +64,7 @@ def generate_data(num_simulations, time_steps, Ts, p1, p2, p3, p4, Gb, Ib):
             input_k = np.array([state[0], state[1], state[2], u, D])
 
             # output: [G_next, X_next, I_next], usando el modelo de bergman
-            next_state = bergman_step(state, t, params, Ts, u)
+            next_state = bergman_step(state, t, params, Ts, u, D)
 
             X_data.append(input_k)
             y_data.append(next_state)
@@ -98,6 +99,7 @@ def save_data(num_simulations, time_steps, Ts, p1, p2, p3, p4, Gb, Ib):
     np.savez("src/data/processed/train_data.npz", X=X_train, y=y_train) #Guardar los datos de entrenamiento en un archivo .npz
     np.savez("src/data/processed/test_data.npz", X=X_test, y=y_test) #Guardar los datos de prueba en un archivo .npz
 
+    print(f"Datos guardados en src/data/processed/train_data.npz y src/data/processed/test_data.npz")
     return X_train, X_test, y_train, y_test
 
 

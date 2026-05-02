@@ -6,6 +6,7 @@ import torch
 
 from src.visualization.plots import ( plot_real_vs_predicted_time,  plot_real_vs_predicted_scatter)
 from src.models.narx_network import NARXNetwork
+from src.models.anfis_model import ANFIS
 from src.evaluation.metrics import (calculate_mae, calculate_mse, calculate_rmse, calculate_r2)
 
 '''
@@ -112,3 +113,100 @@ def evaluate_neural_network(
     plot_real_vs_predicted_scatter(y_true_test, y_pred_nn)
 
     return metrics_table
+
+def evaluate_anfis(
+    test_data_path="src/data/processed/test_data.npz",
+    model_path="saved_models/anfis_model.pt",
+    scaler_X_path="saved_models/anfis_scaler_X.pkl",
+    scaler_y_path="saved_models/anfis_scaler_y.pkl",
+    metrics_path="results/metrics/anfis_metrics_eval.csv"
+):
+    
+
+    print("Cargando datos de prueba para ANFIS...")
+
+    test_data = np.load(test_data_path)
+    X_test = test_data["X"]
+    y_true_test = test_data["y"]
+
+    print("Cargando scalers ANFIS...")
+
+    with open(scaler_X_path, "rb") as f:
+        scaler_X = pickle.load(f)
+
+    with open(scaler_y_path, "rb") as f:
+        scaler_y = pickle.load(f)
+
+    X_test_scaled = scaler_X.transform(X_test)
+    X_test_tensor = torch.tensor(X_test_scaled, dtype=torch.float32)
+
+    input_dim = X_test.shape[1]
+    output_dim = y_true_test.shape[1]
+
+    model = ANFIS(
+        input_dim=input_dim,
+        output_dim=output_dim,
+        num_mfs=2
+    )
+
+    print("Cargando modelo ANFIS entrenado...")
+    model.load_state_dict(torch.load(model_path, map_location="cpu"))
+    model.eval()
+
+    print("Evaluando ANFIS...")
+
+    with torch.no_grad():
+        y_pred_scaled = model(X_test_tensor).cpu().numpy()
+
+    y_pred_anfis = scaler_y.inverse_transform(y_pred_scaled)
+
+    mae = calculate_mae(y_true_test, y_pred_anfis)
+    mse = calculate_mse(y_true_test, y_pred_anfis)
+    rmse = calculate_rmse(y_true_test, y_pred_anfis)
+    r2 = calculate_r2(y_true_test, y_pred_anfis)
+
+    metrics_table = pd.DataFrame({
+        "model": ["ANFIS"],
+        "MAE": [mae],
+        "MSE": [mse],
+        "RMSE": [rmse],
+        "R2": [r2]
+    })
+
+    os.makedirs("results/metrics", exist_ok=True)
+    metrics_table.to_csv(metrics_path, index=False)
+
+    print("Métricas ANFIS guardadas en:", metrics_path)
+    print(metrics_table)
+
+    return metrics_table, y_true_test, y_pred_anfis
+
+def compare_nn_vs_anfis():
+    
+
+    nn_metrics_path = "results/metrics/nn_metrics.csv"
+    anfis_metrics_path = "results/metrics/anfis_metrics.csv"
+    comparison_path = "results/metrics/model_comparison.csv"
+
+    if not os.path.exists(nn_metrics_path):
+        raise FileNotFoundError(
+            "No existe nn_metrics.csv. Primero ejecuta evaluate_neural_network()."
+        )
+
+    if not os.path.exists(anfis_metrics_path):
+        raise FileNotFoundError(
+            "No existe anfis_metrics.csv. Primero ejecuta train_anfis() o evaluate_anfis()."
+        )
+
+    nn_metrics = pd.read_csv(nn_metrics_path)
+    anfis_metrics = pd.read_csv(anfis_metrics_path)
+
+    comparison = pd.concat([nn_metrics, anfis_metrics], ignore_index=True)
+
+    os.makedirs("results/metrics", exist_ok=True)
+    comparison.to_csv(comparison_path, index=False)
+
+    print("Comparación guardada en:", comparison_path)
+    print(comparison)
+
+    return comparison

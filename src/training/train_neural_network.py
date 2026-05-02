@@ -13,6 +13,7 @@ from sklearn.preprocessing import StandardScaler
 from src.models.narx_network import NARXNetwork
 from src.evaluation.metrics import calculate_all_metrics
 from src.visualization.plots import plot_training_loss
+from src.utils import set_seed
 
 
 '''
@@ -29,6 +30,7 @@ from src.visualization.plots import plot_training_loss
 
 # Función de entrenamiento de la red neuronal
 def train_neural_network(epochs,batch_size, learning_rate):
+    set_seed(42)
     
     # Rutas de archivos
     # Datos de entrenamiento y prueba 
