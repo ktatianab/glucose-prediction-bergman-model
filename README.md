@@ -32,3 +32,23 @@ Output: [G(k+1), X(k+1), I(k+1)]
 - Real vs predicted scatter plots
 
 ## How to run
+
+
+
+## How to run
+
+```bash
+git clone https://github.com/ktatianab/glucose-prediction-bergman-model.git
+cd glucose-prediction-bergman-model
+
+python -m venv .venv
+
+# Linux/Mac
+source .venv/bin/activate
+
+# Windows
+# .venv\Scripts\activate
+
+pip install -r requirements.txt
+
+python scripts/main.py
