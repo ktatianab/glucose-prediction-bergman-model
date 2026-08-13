@@ -5,3 +5,4 @@ scikit-learn
 torch
 pandas
 joblib
+setuptools<82

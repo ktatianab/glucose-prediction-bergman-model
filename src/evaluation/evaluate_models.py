@@ -7,7 +7,8 @@ import torch
 from src.visualization.plots import ( plot_real_vs_predicted_time,  plot_real_vs_predicted_scatter)
 from src.models.narx_network import NARXNetwork
 from src.models.anfis_model import ANFIS
-from src.evaluation.metrics import (calculate_mae, calculate_mse, calculate_rmse, calculate_r2)
+from src.evaluation.metrics import (calculate_mae, calculate_mse, calculate_rmse, calculate_r2,
+                                    calculate_decoupled_metrics, get_metrics_dataframe)
 
 '''
     Este archivo se evalua la red neuronal NARX contra el modelo original de Bergman.
@@ -84,30 +85,25 @@ def evaluate_neural_network(
     y_pred_nn = scaler_y.inverse_transform(y_pred_scaled)
 
 
-    #  Calcular métricas
-
-    mae = calculate_mae(y_true_test, y_pred_nn)
-    mse = calculate_mse(y_true_test, y_pred_nn)
-    rmse = calculate_rmse(y_true_test, y_pred_nn)
-    r2 = calculate_r2(y_true_test, y_pred_nn)
-
-    metrics_table = pd.DataFrame({
-        "model": ["Neural Network"],
-        "MAE": [mae],
-        "MSE": [mse],
-        "RMSE": [rmse],
-        "R2": [r2]
-    })
-
+    # Calcular métricas desacopladas por variable
+    metrics_table = get_metrics_dataframe(y_true_test, y_pred_nn, "Neural Network")
 
     # Guardar tabla de métricas
-
     os.makedirs("results/metrics", exist_ok=True)
-
     metrics_table.to_csv(metrics_path, index=False)
 
     print("Métricas guardadas en:", metrics_path)
-    print(metrics_table)
+    print("\n--- Inspección de Rangos (NARX NN) ---")
+    print(f"Glucose (G)  - Real: [{y_true_test[:, 0].min():.2f}, {y_true_test[:, 0].max():.2f}] | Predicho: [{y_pred_nn[:, 0].min():.2f}, {y_pred_nn[:, 0].max():.2f}]")
+    print(f"Insulina (X) - Real: [{y_true_test[:, 1].min():.2f}, {y_true_test[:, 1].max():.2f}] | Predicho: [{y_pred_nn[:, 1].min():.2f}, {y_pred_nn[:, 1].max():.2f}]")
+    print(f"Insulina (I) - Real: [{y_true_test[:, 2].min():.2f}, {y_true_test[:, 2].max():.2f}] | Predicho: [{y_pred_nn[:, 2].min():.2f}, {y_pred_nn[:, 2].max():.2f}]")
+
+    print("\n--- Métricas Enfocadas en Glucosa (G) ---")
+    print(metrics_table[["model", "MAE_G", "RMSE_G", "R2_G"]].to_string(index=False))
+    print("\n--- Reporte Extendido por Variable (NARX NN) ---")
+    decoupled = calculate_decoupled_metrics(y_true_test, y_pred_nn)
+    for var, m in decoupled.items():
+        print(f"Variable {var}: MAE={m['MAE']:.4f}, RMSE={m['RMSE']:.4f}, R2={m['R2']:.4f}")
 
     plot_real_vs_predicted_time(y_true_test, y_pred_nn)
     plot_real_vs_predicted_scatter(y_true_test, y_pred_nn)
@@ -160,24 +156,24 @@ def evaluate_anfis(
 
     y_pred_anfis = scaler_y.inverse_transform(y_pred_scaled)
 
-    mae = calculate_mae(y_true_test, y_pred_anfis)
-    mse = calculate_mse(y_true_test, y_pred_anfis)
-    rmse = calculate_rmse(y_true_test, y_pred_anfis)
-    r2 = calculate_r2(y_true_test, y_pred_anfis)
-
-    metrics_table = pd.DataFrame({
-        "model": ["ANFIS"],
-        "MAE": [mae],
-        "MSE": [mse],
-        "RMSE": [rmse],
-        "R2": [r2]
-    })
+    # Calcular métricas desacopladas por variable
+    metrics_table = get_metrics_dataframe(y_true_test, y_pred_anfis, "ANFIS")
 
     os.makedirs("results/metrics", exist_ok=True)
     metrics_table.to_csv(metrics_path, index=False)
 
     print("Métricas ANFIS guardadas en:", metrics_path)
-    print(metrics_table)
+    print("\n--- Inspección de Rangos (ANFIS) ---")
+    print(f"Glucose (G)  - Real: [{y_true_test[:, 0].min():.2f}, {y_true_test[:, 0].max():.2f}] | Predicho: [{y_pred_anfis[:, 0].min():.2f}, {y_pred_anfis[:, 0].max():.2f}]")
+    print(f"Insulina (X) - Real: [{y_true_test[:, 1].min():.2f}, {y_true_test[:, 1].max():.2f}] | Predicho: [{y_pred_anfis[:, 1].min():.2f}, {y_pred_anfis[:, 1].max():.2f}]")
+    print(f"Insulina (I) - Real: [{y_true_test[:, 2].min():.2f}, {y_true_test[:, 2].max():.2f}] | Predicho: [{y_pred_anfis[:, 2].min():.2f}, {y_pred_anfis[:, 2].max():.2f}]")
+
+    print("\n--- Métricas Enfocadas en Glucosa (G) ---")
+    print(metrics_table[["model", "MAE_G", "RMSE_G", "R2_G"]].to_string(index=False))
+    print("\n--- Reporte Extendido por Variable (ANFIS) ---")
+    decoupled = calculate_decoupled_metrics(y_true_test, y_pred_anfis)
+    for var, m in decoupled.items():
+        print(f"Variable {var}: MAE={m['MAE']:.4f}, RMSE={m['RMSE']:.4f}, R2={m['R2']:.4f}")
 
     return metrics_table, y_true_test, y_pred_anfis
 

@@ -11,7 +11,7 @@ from torch.utils.data import TensorDataset, DataLoader
 from sklearn.preprocessing import StandardScaler
 
 from src.models.narx_network import NARXNetwork
-from src.evaluation.metrics import calculate_all_metrics
+from src.evaluation.metrics import (calculate_all_metrics, calculate_decoupled_metrics, get_metrics_dataframe)
 from src.visualization.plots import plot_training_loss
 from src.utils import set_seed
 
@@ -172,13 +172,14 @@ def train_neural_network(epochs,batch_size, learning_rate):
     y_test_pred = scaler_y.inverse_transform(y_test_pred_scaled)
     y_test_real = scaler_y.inverse_transform(y_test_scaled)
 
-    metrics = calculate_all_metrics(y_test_real, y_test_pred)
+    metrics_table = get_metrics_dataframe(y_test_real, y_test_pred, "Neural Network")
 
-    print("Métricas finales en test:")
-    print("MAE:", metrics["MAE"])
-    print("MSE:", metrics["MSE"])
-    print("RMSE:", metrics["RMSE"])
-    print("R2:", metrics["R2"])
+    print("\nMétricas finales en test (Desacopladas):")
+    print(metrics_table[["model", "MAE_G", "RMSE_G", "R2_G"]].to_string(index=False))
+    print("\nReporte Extendido por Variable (NARX NN):")
+    decoupled = calculate_decoupled_metrics(y_test_real, y_test_pred)
+    for var, m in decoupled.items():
+        print(f"Variable {var}: MAE={m['MAE']:.4f}, RMSE={m['RMSE']:.4f}, R2={m['R2']:.4f}")
 
     plot_training_loss(history) 
 

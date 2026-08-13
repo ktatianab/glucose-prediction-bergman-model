@@ -9,7 +9,7 @@ from torch.utils.data import TensorDataset, DataLoader
 from sklearn.preprocessing import StandardScaler
 
 from src.models.anfis_model import ANFIS
-from src.evaluation.metrics import calculate_all_metrics
+from src.evaluation.metrics import (calculate_all_metrics, calculate_decoupled_metrics, get_metrics_dataframe)
 
 '''
 Este archivo contiene la función de entrenamiento del modelo ANFIS.
@@ -190,26 +190,16 @@ def train_anfis(
     y_pred = scaler_y.inverse_transform(y_pred_scaled)
     y_real = scaler_y.inverse_transform(y_test_scaled)
 
-    metrics = calculate_all_metrics(y_real, y_pred)
+    metrics_table = get_metrics_dataframe(y_real, y_pred, "ANFIS")
 
-    print("Métricas finales ANFIS:")
-    print("MAE:", metrics["MAE"])
-    print("MSE:", metrics["MSE"])
-    print("RMSE:", metrics["RMSE"])
-    print("R2:", metrics["R2"])
-
-    # Guardar métricas en CSV.
-    import pandas as pd
-
-    metrics_table = pd.DataFrame({
-        "model": ["ANFIS"],
-        "MAE": [metrics["MAE"]],
-        "MSE": [metrics["MSE"]],
-        "RMSE": [metrics["RMSE"]],
-        "R2": [metrics["R2"]]
-    })
+    print("Métricas finales ANFIS (Desacopladas):")
+    print(metrics_table[["model", "MAE_G", "RMSE_G", "R2_G"]].to_string(index=False))
+    print("\nReporte Extendido por Variable (ANFIS):")
+    decoupled = calculate_decoupled_metrics(y_real, y_pred)
+    for var, m in decoupled.items():
+        print(f"Variable {var}: MAE={m['MAE']:.4f}, RMSE={m['RMSE']:.4f}, R2={m['R2']:.4f}")
 
     metrics_table.to_csv(metrics_path, index=False)
-    print("Métricas ANFIS guardadas en:", metrics_path)
+    print("\nMétricas ANFIS guardadas en:", metrics_path)
 
     return model, scaler_X, scaler_y, history
