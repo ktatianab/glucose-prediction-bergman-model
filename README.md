@@ -34,6 +34,8 @@ Output: [G(k+1), X(k+1), I(k+1)]
 
 <img width="533" height="223" alt="image" src="https://github.com/user-attachments/assets/c719e132-fa3c-41ce-98d4-c37605e12303" />
 
+## NN Prediction
+<img width="2968" height="2368" alt="03_nn_prediction" src="https://github.com/user-attachments/assets/79563c8e-6737-437e-9f46-0908c7e64dae" />
 
 
 ## How to run
