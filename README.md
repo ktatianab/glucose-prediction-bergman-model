@@ -31,6 +31,11 @@ Output: [G(k+1), X(k+1), I(k+1)]
 - Prediction plots
 - Real vs predicted scatter plots
 
+
+<img width="533" height="223" alt="image" src="https://github.com/user-attachments/assets/c719e132-fa3c-41ce-98d4-c37605e12303" />
+
+
+
 ## How to run
 
 
