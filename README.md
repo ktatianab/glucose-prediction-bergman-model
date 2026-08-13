@@ -48,4 +48,4 @@ source .venv/bin/activate
 
 pip install -r requirements.txt
 
-python scripts/main.py
+python scripts/main.py 
